@@ -24,8 +24,7 @@ class Scraper:
 
 	def __init__(self, url, headless = False, proxy = False):
 		self.url = url
-		if headless: 
-			self.headless = True
+		self.headless = headless
 		self.setup_driver_options(headless, proxy)
 		self.setup_driver()
 

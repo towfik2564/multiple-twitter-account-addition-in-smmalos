@@ -26,16 +26,22 @@ if __name__ == "__main__":
                 scraper = Scraper('https://twitter.com/i/flow/signup', False, proxy)
                 providers = sim.get_best_providers()
                 phone_info = sim.purchase_a_number(providers)
-                scraper.element_click_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]')
+                if scraper.find_element_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]', False):
+                    scraper.element_click_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]')
+                else:
+                    scraper.element_click_by_xpath('//*[contains(text(), "Sign up with phone or email")]')
                 scraper.element_send_keys('input[name="name"]', user['name'])
                 scraper.element_send_keys('input[name=phone_number]', phone_info['phone'])
                 scraper.select_dropdown('select[id=SELECTOR_1]', user['dob']['month'])
                 scraper.select_dropdown('select[id=SELECTOR_2]', user['dob']['day'])
                 scraper.select_dropdown('select[id=SELECTOR_3]', user['dob']['year'])
-                scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
-                scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
-                scraper.click_element_untill_xpath('//*[contains(text(), "Sign up")]')
-                    
+                if scraper.find_element_by_xpath('//*[contains(text(), "Next")]', False):
+                    scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
+                    scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
+                    scraper.click_element_untill_xpath('//*[contains(text(), "Sign up")]')
+                else:
+                    scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
+                os.system('pause')
                 scraper.click_element_untill_xpath('//span[contains(text(), "OK")]')
                 otp = sim.get_otp(phone_info['id'])
                 if otp:
