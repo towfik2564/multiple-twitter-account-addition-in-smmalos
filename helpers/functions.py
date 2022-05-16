@@ -36,6 +36,19 @@ def get_sites():
         exit()
     return data
 
+def get_proxies():
+    try:
+        with open(os.getcwd() + "\\inputs\\proxies.txt", "r") as file:
+            data = file.read()
+            list = data.split("\n")
+            data = []
+            for site in list:
+                data.append(site)
+    except:
+        print('websites.txt file not found')
+        exit()
+    return data
+
 def formatted_time(t, hours = False):
     m, s = divmod(t, 60)
     h, m = divmod(m, 60)

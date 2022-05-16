@@ -15,6 +15,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
+import os
+import zipfile
+
 class Scraper:
 	# This time is used when we are waiting for element to get loaded in the html
 	wait_element_time = 5
@@ -62,7 +65,71 @@ class Scraper:
 			self.driver_options.add_argument('--headless')
 
 		if proxy:
-			self.driver_options.add_argument(f'--proxy-server={proxy}')
+			# self.driver_options.add_argument(f'--proxy-server={proxy}')
+			proxy= proxy.split(':')
+			PROXY_HOST = proxy[0]
+			PROXY_PORT = proxy[1]
+			PROXY_USER = proxy[2]
+			PROXY_PASS = proxy[3]
+
+			manifest_json = """
+			{
+				"version": "1.0.0",
+				"manifest_version": 2,
+				"name": "Chrome Proxy",
+				"permissions": [
+					"proxy",
+					"tabs",
+					"unlimitedStorage",
+					"storage",
+					"<all_urls>",
+					"webRequest",
+					"webRequestBlocking"
+				],
+				"background": {
+					"scripts": ["background.js"]
+				},
+				"minimum_chrome_version":"22.0.0"
+			}
+			"""
+
+			background_js = """
+			var config = {
+					mode: "fixed_servers",
+					rules: {
+					singleProxy: {
+						scheme: "http",
+						host: "%s",
+						port: parseInt(%s)
+					},
+					bypassList: ["localhost"]
+					}
+				};
+
+			chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
+
+			function callbackFn(details) {
+				return {
+					authCredentials: {
+						username: "%s",
+						password: "%s"
+					}
+				};
+			}
+
+			chrome.webRequest.onAuthRequired.addListener(
+						callbackFn,
+						{urls: ["<all_urls>"]},
+						['blocking']
+			);
+			""" % (PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
+
+			pluginfile = 'proxy_auth_plugin.zip'
+
+			with zipfile.ZipFile(pluginfile, 'w') as zp:
+				zp.writestr("manifest.json", manifest_json)
+				zp.writestr("background.js", background_js)
+			self.driver_options.add_extension(pluginfile)
 
 
 	# Setup chrome driver with predefined options

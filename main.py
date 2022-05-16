@@ -2,15 +2,13 @@ import time
 from helpers.scraper import Scraper
 from selenium.common.exceptions import TimeoutException
 from helpers.fivesim import FiveSim 
-from helpers.proxy import Proxy 
 import os
 
-from helpers.functions import get_acc_info, get_sites, formatted_time, countdown
+from helpers.functions import get_acc_info, get_sites, formatted_time, countdown, get_proxies
 from helpers.twitter import Twitter
 
 if __name__ == "__main__":
-    proxy =  Proxy()
-    proxies = proxy.proxie_list()
+    proxies = get_proxies()
 
     for proxy in proxies:
         print(f'proxy connected: {proxy}')
@@ -25,16 +23,13 @@ if __name__ == "__main__":
             for idx, user in enumerate(users):
                 scraper = Scraper('https://twitter.com/i/flow/signup', False, proxy)
                 providers = sim.get_best_providers()
-                phone_info = sim.purchase_a_number(providers)
-                if scraper.find_element_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]', False):
-                    scraper.element_click_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]')
-                else:
-                    scraper.element_click_by_xpath('//*[contains(text(), "Sign up with phone or email")]')
+                scraper.element_click('a[data-testid="signupButton"]')
                 scraper.element_send_keys('input[name="name"]', user['name'])
                 scraper.element_send_keys('input[name=phone_number]', phone_info['phone'])
                 scraper.select_dropdown('select[id=SELECTOR_1]', user['dob']['month'])
                 scraper.select_dropdown('select[id=SELECTOR_2]', user['dob']['day'])
                 scraper.select_dropdown('select[id=SELECTOR_3]', user['dob']['year'])
+                phone_info = sim.purchase_a_number(providers)
                 if scraper.find_element_by_xpath('//*[contains(text(), "Next")]', False):
                     scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
                     scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
