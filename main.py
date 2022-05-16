@@ -1,68 +1,85 @@
 import time
 from helpers.scraper import Scraper
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.by import By
+from helpers.fivesim import FiveSim 
+from helpers.proxy import Proxy 
 import os
-from os import listdir
-from os.path import isfile, join
-import random
 
-def get_accounts():
-    with open("accounts.txt", "r") as file:
-        data = file.read()
-        list = data.split("\n")
-        images = [f for f in listdir('images') if isfile(join('images', f))]
-        accounts = []
-        for data in list:
-            index = random.randint(0,len(images)-1)
-            image = os.path.abspath(os.getcwd()) + '\images\\' + images[index]
-            data = {
-                'username': data.split(':')[0],
-                'password': data.split(':')[1],
-                'phone': data.split(':')[2],
-                'img': image
-            }
-            accounts.append(data)
-        return accounts
-def setup_profile(scraper, account):
-    scraper.element_click_by_xpath('//span[contains(text(), "Set up profile")]')
-    scraper.input_file_add_files('input[accept="image/jpeg,image/png,image/webp"]', account['img'])
-    scraper.element_click_by_xpath('//span[contains(text(), "Apply")]')
-    scraper.element_click_by_xpath('//span[contains(text(), "Next")]')
-
-def edit_profile(scraper, account):
-    scraper.element_click('a[data-testid=editProfileButton]')
-    # scraper.go_to_page('https://twitter.com/settings/profile')
-    profile_pic_element = scraper.driver.find_elements(By.CSS_SELECTOR, 'input[accept="image/jpeg,image/png,image/webp"]')[1]
-    profile_pic_element.send_keys(account['img'])
-    scraper.element_click_by_xpath('//span[contains(text(), "Apply")]')
-    scraper.element_click_by_xpath('//span[contains(text(), "Save")]')
+from helpers.functions import get_acc_info, get_sites, formatted_time, countdown
+from helpers.twitter import Twitter
 
 if __name__ == "__main__":
-    accounts = get_accounts()
-    for idx, account in enumerate(accounts): 
-        if idx != 0:
-            print('waiting 20secs before next login')
-            time.sleep(20)
-        scraper = Scraper('https://twitter.com/i/flow/login')
-        scraper.element_send_keys('input[name=text]', account['username'])
-        scraper.element_click_by_xpath('//span[contains(text(), "Next")]')
-        scraper.element_send_keys('input[name=password]', account['password'])
-        scraper.element_click_by_xpath('//span[contains(text(), "Log in")]')
-        if scraper.find_element('input[type=tel]', False):
-            scraper.element_send_keys('input[type=tel]', account['phone'])
-            scraper.element_click_by_xpath('//span[contains(text(), "Next")]')
-        time.sleep(2)
-        scraper.element_click('a[aria-label=Profile]')
-        time.sleep(2)
+    proxy =  Proxy()
+    proxies = proxy.proxie_list()
+
+    for proxy in proxies:
+        print(f'proxy connected: {proxy}')
+        try: 
+            users = get_acc_info()
+            sim = FiveSim()
+            twitter = Twitter()
+            sites_to_authenticate = get_sites() 
+            waiting_delay = 5
+            time_str = formatted_time(waiting_delay)
+
+            for idx, user in enumerate(users):
+                scraper = Scraper('https://twitter.com/i/flow/signup', False, proxy)
+                providers = sim.get_best_providers()
+                phone_info = sim.purchase_a_number(providers)
+                scraper.element_click_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]')
+                scraper.element_send_keys('input[name="name"]', user['name'])
+                scraper.element_send_keys('input[name=phone_number]', phone_info['phone'])
+                scraper.select_dropdown('select[id=SELECTOR_1]', user['dob']['month'])
+                scraper.select_dropdown('select[id=SELECTOR_2]', user['dob']['day'])
+                scraper.select_dropdown('select[id=SELECTOR_3]', user['dob']['year'])
+                scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
+                scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
+                scraper.click_element_untill_xpath('//*[contains(text(), "Sign up")]')
+                    
+                scraper.click_element_untill_xpath('//span[contains(text(), "OK")]')
+                otp = sim.get_otp(phone_info['id'])
+                if otp:
+                    scraper.element_send_keys('input[name=verfication_code]', otp)
+                    scraper.element_click_by_xpath('//span[contains(text(), "Next")]')
+                else: 
+                    break
+                scraper.element_send_keys('input[name=password]', user['password'])
+                scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+                
+                twitter.upload_pro_pic(scraper, user['img'])
+                scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+
+                scraper.element_send_keys('textarea', 'Hi there!')
+                scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+
+                username = scraper.find_elements('span[tabindex="0"][role="button"]')[0]
+                user['username'] = username.text
+                username.click()
+                scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+                
+
+                print(user)
+                os.system('pause')
+                # scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+
+                scraper.go_to_page('www.twitter.com')
+                scraper.driver.execute_script("window.open('')")
+                scraper.driver.switch_to.window(scraper.driver.window_handles[1])
+
+                for site in sites_to_authenticate:
+                    scraper.go_to_page(site)
+                    scraper.element_click('a[href="/login"]')
+                    scraper.element_click('input[id=allow]')
+                    time.sleep(3)
+                print(user)
+                
+                scraper.driver.close()
+                print(f'Waiting {time_str} before next signup')
+                countdown(waiting_delay)
+                os.system('pause')
+        except: 
+            continue
+
+
         
-        if scraper.find_element_by_xpath('//span[contains(text(), "Set up profile")]', False): 
-            setup_profile(scraper, account)
-        else:
-            edit_profile(scraper, account)
-        
-        scraper.go_to_page('https://smmalos.xyz/')
-        scraper.element_click('a[href="/login"]')
-        scraper.element_click('input[id=allow]')
-        scraper.driver.close()
 

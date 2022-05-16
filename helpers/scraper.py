@@ -13,26 +13,31 @@ from selenium.common.exceptions import InvalidArgumentException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 
 class Scraper:
 	# This time is used when we are waiting for element to get loaded in the html
-	wait_element_time = 10
+	wait_element_time = 5
 
 	# In this folder we will save cookies from logged in users
 	cookies_folder = 'cookies' + os.path.sep
 
-	def __init__(self, url):
+	def __init__(self, url, headless = False, proxy = False):
 		self.url = url
-		self.setup_driver_options()
+		if headless: 
+			self.headless = True
+		self.setup_driver_options(headless, proxy)
 		self.setup_driver()
 
 	# Automatically close driver on destruction of the object
 	def __del__(self):
-		print('closing browser')
+		if self.headless == False: 
+			print('closing browser')
+			
 		
 	# Add these options in order to make chrome driver appear as a human instead of detecting it as a bot
 	# Also change the 'cdc_' string in the chromedriver.exe with Notepad++ for example with 'abc_' to prevent detecting it as a bot
-	def setup_driver_options(self):
+	def setup_driver_options(self, headless, proxy):
 		self.driver_options = Options()
 
 		arguments = [
@@ -53,10 +58,17 @@ class Scraper:
 
 		for key, value in experimental_options.items():
 			self.driver_options.add_experimental_option(key, value)
+		
+		if headless:
+			self.driver_options.add_argument('--headless')
+
+		if proxy:
+			self.driver_options.add_argument(f'--proxy-server={proxy}')
+
 
 	# Setup chrome driver with predefined options
 	def setup_driver(self):
-		self.s = Service('C:/chromedriver/chromedriver.exe')
+		self.s = Service(executable_path=os.path.join(os.curdir,'chromedriver'))
 		self.driver = webdriver.Chrome(service=self.s, options = self.driver_options)
 		self.driver.get(self.url)
 
@@ -212,6 +224,16 @@ class Scraper:
 	def click_checkbox(self, selector_position):
 		elements = self.driver.find_elements_by_tag_name('input[type="checkbox"]')[selector_position]
 		elements.click()
+	
+	def select_dropdown(self, selector, val, text = False):
+		element = self.find_element(selector)
+		select = Select(element)
+		if text:
+			select.select_by_visible_text(val)
+		else:
+			if type(val) == int:
+				val = str(val)
+			select.select_by_value(val)
 
 	def add_emoji(self, selector, text):
 		JS_ADD_TEXT_TO_INPUT = """
@@ -257,13 +279,30 @@ class Scraper:
 
 		element.send_keys(text)
 		
-	def element_send_keys_by_xpath(self, selector, text, delay = True):
+	def click_element_untill_xpath(self, xpath, loop_count=5):
+		element = False
+		loop_running = 0
+		while not element:
+			if loop_count != loop_running:
+				element = self.element_click_by_xpath(xpath)
+				break
+			else: 
+				loop_running += 1
+
+	# Wait random time before cliking on the element
+	def element_click_by_xpath(self, xpath, exit_on_missing_element=False, delay = True):
 		if delay:
 			self.wait_random_time()
 
-		element = self.find_element_by_xpath(selector)
-
-		element.send_keys(text)
+		try: 
+			element = self.find_element_by_xpath(xpath)
+			element.click()
+		except:
+			if exit_on_missing_element:
+				exit()
+			else:
+				return False
+		return element
 
 	# scraper.input_file_add_files('input[accept="image/jpeg,image/png,image/webp"]', images_path)
 	def input_file_add_files(self, selector, files):
