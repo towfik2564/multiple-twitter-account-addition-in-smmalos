@@ -4,11 +4,11 @@ from selenium.common.exceptions import TimeoutException
 from helpers.fivesim import FiveSim 
 import os
 
-from helpers.functions import get_acc_info, get_sites, formatted_time, countdown, get_proxies
+from helpers.functions import get_acc_info, read_txt, formatted_time, countdown
 from helpers.twitter import Twitter
 
 if __name__ == "__main__":
-    proxies = get_proxies()
+    proxies = read_txt('proxies.txt')
 
     for proxy in proxies:
         print(f'proxy connected: {proxy}')
@@ -16,14 +16,14 @@ if __name__ == "__main__":
             users = get_acc_info()
             sim = FiveSim()
             twitter = Twitter()
-            sites_to_authenticate = get_sites() 
+            sites_to_authenticate = read_txt('websites.txt') 
             waiting_delay = 5
             time_str = formatted_time(waiting_delay)
 
             for idx, user in enumerate(users):
                 scraper = Scraper('https://twitter.com/i/flow/signup', False, proxy)
                 providers = sim.get_best_providers()
-                scraper.element_click('a[data-testid="signupButton"]')
+                scraper.element_click('a[data-testid=signupButton]')
                 scraper.element_send_keys('input[name="name"]', user['name'])
                 scraper.element_send_keys('input[name=phone_number]', phone_info['phone'])
                 scraper.select_dropdown('select[id=SELECTOR_1]', user['dob']['month'])

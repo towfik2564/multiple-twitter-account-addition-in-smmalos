@@ -5,50 +5,33 @@ from os import listdir
 from os.path import isfile, join
 import time
 
+
+def read_txt(file_name):
+    file_dir = os.getcwd() + "\\inputs\\" + file_name
+    try:
+        with open(file_dir, "r") as file:
+            data = file.read()
+            list = data.split("\n")
+            data = []
+            for site in list:
+                data.append(site)
+    except:
+        print(f'{file_name} file not found in {file_dir}')
+        exit()
+    return data
+
 def get_acc_info():
-    try:
-        with open(os.getcwd() + "\\inputs\\names.txt", "r") as file:
-            data = file.read()
-            users = data.split("\n")
-            data = []
-            for user in users:
-                user = generate_user_info(user)
-                images = [f for f in listdir('images') if isfile(join('images', f))]
-                index = random.randint(0,len(images)-1)
-                image = os.path.abspath(os.getcwd()) + '\images\\' + images[index]
-                user['img'] = image
-                data.append(user)
-    except:
-        print('names.txt file not found')
-        exit()
+    users = read_txt('names.txt')
+    data = []
+    for user in users:
+        user = generate_user_info(user)
+        images = [f for f in listdir('images') if isfile(join('images', f))]
+        index = random.randint(0,len(images)-1)
+        image = os.path.abspath(os.getcwd()) + '\images\\' + images[index]
+        user['img'] = image
+        data.append(user)
     return data
-
-def get_sites():
-    try:
-        with open(os.getcwd() + "\\inputs\\websites.txt", "r") as file:
-            data = file.read()
-            list = data.split("\n")
-            data = []
-            for site in list:
-                data.append(site)
-    except:
-        print('websites.txt file not found')
-        exit()
-    return data
-
-def get_proxies():
-    try:
-        with open(os.getcwd() + "\\inputs\\proxies.txt", "r") as file:
-            data = file.read()
-            list = data.split("\n")
-            data = []
-            for site in list:
-                data.append(site)
-    except:
-        print('websites.txt file not found')
-        exit()
-    return data
-
+    
 def formatted_time(t, hours = False):
     m, s = divmod(t, 60)
     h, m = divmod(m, 60)
