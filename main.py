@@ -14,15 +14,18 @@ if __name__ == "__main__":
     sites_to_authenticate = read_txt('websites.txt') 
     waiting_delay = 5
     time_str = formatted_time(waiting_delay)
+    asian = False
 
     for idx, user in enumerate(users):
         scraper = Scraper('https://twitter.com/i/flow/signup')
         # time.sleep(5)
-        if scraper.find_element_by_xpath('//*[contains(text(), "Sign up with email or phone")]', False):
-            scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up with email or phone")]')
+        if scraper.find_element_by_xpath('//*[contains(text(), "Sign up with phone or email")]', False):
+            asian = False
+            scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up with phone or email")]')
         else:
             scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]')
-            
+            asian = True
+
         providers = sim.get_best_providers()
         phone_info = sim.purchase_a_number(providers)
         scraper.element_send_keys('input[name="name"]', user['name'])
@@ -30,14 +33,12 @@ if __name__ == "__main__":
         scraper.select_dropdown('select[id=SELECTOR_1]', user['dob']['month'])
         scraper.select_dropdown('select[id=SELECTOR_2]', user['dob']['day'])
         scraper.select_dropdown('select[id=SELECTOR_3]', user['dob']['year'])
-        if scraper.find_element_by_xpath('//*[contains(text(), "Next")]', False):
-            scraper.element_force_click_by_xpath('//*[contains(text(), "Next")]')
-            scraper.element_force_click_by_xpath('//*[contains(text(), "Next")]')
-            scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up")]')
-        else:
-            scraper.element_force_click_by_xpath('//*[contains(text(), "Next")]')
-        os.system('pause')
+        
+        scraper.element_force_click_by_xpath('//*[contains(text(), "Next")]')
+        scraper.element_force_click_by_xpath('//*[contains(text(), "Next")]')
+        scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up")]')
         scraper.element_force_click_by_xpath('//span[contains(text(), "OK")]')
+            
         otp = sim.get_otp(phone_info['id'])
         if otp:
             scraper.element_send_keys('input[name=verfication_code]', otp)
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         scraper.element_send_keys('textarea', 'Hi there!')
         scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
 
-        username = scraper.find_elements('span[tabindex="0"][role="button"]')[0]
+        username = scraper.find_elements('span[role="button"]')[0]
         user['username'] = username.text
         username.click()
         scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
