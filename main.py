@@ -17,48 +17,51 @@ if __name__ == "__main__":
 
     for idx, user in enumerate(users):
         scraper = Scraper('https://twitter.com/i/flow/signup')
+        # time.sleep(5)
+        if scraper.find_element_by_xpath('//*[contains(text(), "Sign up with email or phone")]', False):
+            scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up with email or phone")]')
+        else:
+            scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]')
+            
         providers = sim.get_best_providers()
-        if scraper.find_element_by_xpath('//*[contains(text(), "Sign up with phone or email")]', False):
-
-        else: 
+        phone_info = sim.purchase_a_number(providers)
         scraper.element_send_keys('input[name="name"]', user['name'])
         scraper.element_send_keys('input[name=phone_number]', phone_info['phone'])
         scraper.select_dropdown('select[id=SELECTOR_1]', user['dob']['month'])
         scraper.select_dropdown('select[id=SELECTOR_2]', user['dob']['day'])
         scraper.select_dropdown('select[id=SELECTOR_3]', user['dob']['year'])
-        phone_info = sim.purchase_a_number(providers)
         if scraper.find_element_by_xpath('//*[contains(text(), "Next")]', False):
-            scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
-            scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
-            scraper.click_element_untill_xpath('//*[contains(text(), "Sign up")]')
+            scraper.element_force_click_by_xpath('//*[contains(text(), "Next")]')
+            scraper.element_force_click_by_xpath('//*[contains(text(), "Next")]')
+            scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up")]')
         else:
-            scraper.click_element_untill_xpath('//*[contains(text(), "Next")]')
+            scraper.element_force_click_by_xpath('//*[contains(text(), "Next")]')
         os.system('pause')
-        scraper.click_element_untill_xpath('//span[contains(text(), "OK")]')
+        scraper.element_force_click_by_xpath('//span[contains(text(), "OK")]')
         otp = sim.get_otp(phone_info['id'])
         if otp:
             scraper.element_send_keys('input[name=verfication_code]', otp)
-            scraper.element_click_by_xpath('//span[contains(text(), "Next")]')
+            scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
         else: 
             break
         scraper.element_send_keys('input[name=password]', user['password'])
-        scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+        scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
         
         twitter.upload_pro_pic(scraper, user['img'])
-        scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+        scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
 
         scraper.element_send_keys('textarea', 'Hi there!')
-        scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+        scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
 
         username = scraper.find_elements('span[tabindex="0"][role="button"]')[0]
         user['username'] = username.text
         username.click()
-        scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+        scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
         
 
         print(user)
         os.system('pause')
-        # scraper.click_element_untill_xpath('//span[contains(text(), "Next")]')
+        # scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
 
         scraper.go_to_page('www.twitter.com')
         scraper.driver.execute_script("window.open('')")

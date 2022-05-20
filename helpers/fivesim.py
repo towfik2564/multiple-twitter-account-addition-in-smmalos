@@ -32,7 +32,7 @@ class FiveSim:
                         'cost': operator['cost'],
                         'count': operator['count']
                     })
-        providers = sorted(providers, key=lambda d: d['cost']) 
+        # providers = sorted(providers, key=lambda d: d['cost'], reverse=True) 
         return providers
     
     def purchase_a_number(self, providers):

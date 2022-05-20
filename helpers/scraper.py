@@ -322,19 +322,45 @@ class Scraper:
 	def element_click(self, selector, delay = True):
 		if delay:
 			self.wait_random_time()
-
+			
 		element = self.find_element(selector)
-
 		element.click()
-
+		
+	def element_force_click(self, selector, loop_count=3, delay = True):
+		element = False
+		loop = 0
+		while not element and loop < loop_count:
+			if delay:
+				self.wait_random_time()
+			element = self.find_element(selector, False)
+			if element:
+				element.click()
+			else:
+				print(f"selector: {selector} not clickable yet, trying again")
+				loop += 1
+		if not element:
+			exit()
+				
 	# Wait random time before cliking on the element
 	def element_click_by_xpath(self, xpath, delay = True):
 		if delay:
 			self.wait_random_time()
 
 		element = self.find_element_by_xpath(xpath)
-
 		element.click()
+
+	def element_force_click_by_xpath(self, xpath, loop_count=3, delay = True):
+		element = False
+		loop = 0
+		while not element and loop < loop_count:
+			if delay:
+				self.wait_random_time()
+			try:
+				element = self.find_element_by_xpath(xpath)
+				element.click()
+			except TimeoutException:
+				print(f"button: {xpath} not clickable yet, trying again")
+				loop += 1
 
 	# Wait random time before sending the keys to the element
 	def element_send_keys(self, selector, text, delay = True):
@@ -344,16 +370,6 @@ class Scraper:
 		element = self.find_element(selector)
 
 		element.send_keys(text)
-		
-	def click_element_untill_xpath(self, xpath, loop_count=5):
-		element = False
-		loop_running = 0
-		while not element:
-			if loop_count != loop_running:
-				element = self.element_click_by_xpath(xpath)
-				break
-			else: 
-				loop_running += 1
 
 	# Wait random time before cliking on the element
 	def element_click_by_xpath(self, xpath, exit_on_missing_element=False, delay = True):
