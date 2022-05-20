@@ -65,7 +65,7 @@ if __name__ == "__main__":
                 
 
                 print(user)
-                os.system('pause')
+                # os.system('pause')
                 # scraper.element_force_click_by_xpath('//span[contains(text(), "Next")]')
 
                 scraper.go_to_page('www.twitter.com')
