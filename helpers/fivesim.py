@@ -34,6 +34,13 @@ class FiveSim:
                     })
         # providers = sorted(providers, key=lambda d: d['cost'], reverse=True) 
         return providers
+
+    def purchase_a_russian_number(self):
+        country = 'russia'
+        operator = 'any'
+        product = 'twitter'
+        response = requests.get('https://5sim.net/v1/user/buy/activation/' + country + '/' + operator + '/' + product, headers=self.headers)
+        return response.text
     
     def purchase_a_number(self, providers):
         for idx, provider in enumerate(providers):

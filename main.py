@@ -31,8 +31,7 @@ if __name__ == "__main__":
                     scraper.element_force_click_by_xpath('//*[contains(text(), "Sign up with a phone number or email address")]')
                     asian = True
 
-                providers = sim.get_best_providers()
-                phone_info = sim.purchase_a_number(providers)
+                phone_info = sim.purchase_a_russian_number()
                 scraper.element_send_keys('input[name="name"]', user['name'])
                 scraper.element_send_keys('input[name=phone_number]', phone_info['phone'])
                 scraper.select_dropdown('select[id=SELECTOR_1]', user['dob']['month'])
