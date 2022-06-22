@@ -9,6 +9,7 @@ from helpers.twitter import Twitter
 
 if __name__ == "__main__":
     users = get_acc_info()
+    print(users)
     sim = FiveSim()
     twitter = Twitter()
     sites_to_authenticate = read_txt('websites.txt') 
